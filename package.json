@@ -1,0 +1,54 @@
+{
+    "name": "srivishva-jewellers-backend",
+    "version": "1.0.0",
+    "description": "Sri vishva jewellers Backend API - Node.js + Express + PostgreSQL",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon --ignore database.sqlite --ignore 'logs/*' src/server.js",
+        "migrate": "node src/migrations/run.js",
+        "seed": "node debug_seed.js",
+        "test": "jest --coverage",
+        "lint": "eslint src/"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.97.0",
+        "aws-sdk": "^2.1524.0",
+        "axios": "^1.13.5",
+        "bcryptjs": "^2.4.3",
+        "cloudinary": "^1.41.1",
+        "compression": "^1.7.4",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "expo-server-sdk": "^5.0.0",
+        "express": "^4.18.2",
+        "express-rate-limit": "^7.1.5",
+        "express-validator": "^7.0.1",
+        "firebase-admin": "^13.6.1",
+        "form-data": "^4.0.5",
+        "helmet": "^7.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "mongodb": "^7.1.1",
+        "mongoose": "^9.3.3",
+        "morgan": "^1.10.0",
+        "multer": "^1.4.5-lts.1",
+        "node-cron": "^3.0.3",
+        "pdfkit": "^0.17.2",
+        "pdfkit-table": "^0.1.99",
+        "razorpay": "^2.9.2",
+        "redis": "^4.6.12",
+        "socket.io": "^4.6.1",
+        "twilio": "^4.20.0",
+        "winston": "^3.11.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.56.0",
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.2",
+        "prettier": "^3.1.1",
+        "supertest": "^6.3.3"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

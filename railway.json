@@ -1,0 +1,12 @@
+{
+  "name": "digigold-production",
+  "services": [
+    {
+      "type": "web",
+      "name": "backend",
+      "rootDirectory": "backend",
+      "buildCommand": "npm install",
+      "startCommand": "npm start"
+    }
+  ]
+}
