@@ -225,26 +225,26 @@ const initializeServices = async () => {
             await connectDB();
             
             // Only poll if needed (GoldEngine internal check handles caching)
-            await GoldEngine.pollLivePrice();
-            await SilverEngine.pollLivePrice();
+            // await GoldEngine.pollLivePrice();
+            // await SilverEngine.pollLivePrice();
             
             // Cron and Intervals only for persistent servers
-            if (!process.env.VERCEL) {
-                CronScheduler.init();
+            // if (!process.env.VERCEL) {
+            //     CronScheduler.init();
                 
-                const GOLD_POLL_INTERVAL = parseInt(process.env.GOLD_PRICE_POLL_INTERVAL_MS) || 30 * 1000;
-                setInterval(async () => {
-                    const price = await GoldEngine.pollLivePrice();
-                    io.to('goldPrice').emit('goldPriceUpdate', { price, timestamp: new Date() });
-                }, GOLD_POLL_INTERVAL);
+            //     const GOLD_POLL_INTERVAL = parseInt(process.env.GOLD_PRICE_POLL_INTERVAL_MS) || 30 * 1000;
+            //     setInterval(async () => {
+            //         const price = await GoldEngine.pollLivePrice();
+            //         io.to('goldPrice').emit('goldPriceUpdate', { price, timestamp: new Date() });
+            //     }, GOLD_POLL_INTERVAL);
 
-                setInterval(async () => {
-                    const price = await SilverEngine.pollLivePrice();
-                    io.to('silverPrice').emit('silverPriceUpdate', { price, timestamp: new Date() });
-                }, GOLD_POLL_INTERVAL);
+            //     setInterval(async () => {
+            //         const price = await SilverEngine.pollLivePrice();
+            //         io.to('silverPrice').emit('silverPriceUpdate', { price, timestamp: new Date() });
+            //     }, GOLD_POLL_INTERVAL);
                 
-                logger.info('🚀 Persistent services (Cron/Intervals) initialized');
-            }
+            //     logger.info('🚀 Persistent services (Cron/Intervals) initialized');
+            // }
             
             isInitialized = true;
             logger.info('✅ Services initialized successfully');
