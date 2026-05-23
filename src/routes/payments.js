@@ -141,6 +141,12 @@ router.post('/verify', authenticateToken, async (req, res) => {
         payment.providerReferenceId = razorpay_payment_id || `PAY_${Date.now()}`;
         await payment.save();
 
+        await User.findByIdAndUpdate(req.user.id, {
+            $set: {
+                [`lastPaidAmount.${payment.planType}`]: payment.amount
+            }
+        });
+
         notificationService.sendNotification(
             req.user.id,
             '💰 Payment Successful',
@@ -269,6 +275,27 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         res.json({ success: true, message: 'Webhook processed' });
     } catch (error) {
         console.error('Webhook processing error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.get('/last-amount/:planType/:metalType', authenticateToken, async (req, res) => {
+    try {
+        const { planType, metalType } = req.params;
+
+        // Find most recent completed payment for this user + plan
+        const lastPayment = await Payment.findOne({
+            userId: req.user.id,
+            planType,
+            metalType,
+            status: 'completed',
+        }).sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            amount: lastPayment ? lastPayment.amount : null,
+        });
+    } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
