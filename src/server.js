@@ -66,6 +66,7 @@ const staticUploadsDir = isVercel
     : path.join(__dirname, '../uploads');
 
 app.use('/uploads', express.static(staticUploadsDir));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Trust proxy for Vercel/Render deployments
 app.set('trust proxy', 1);

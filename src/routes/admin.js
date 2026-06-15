@@ -5,6 +5,10 @@ const MetalPriceService = require('../services/MetalPriceService');
 const logger = require('../utils/logger');
 // PDFDocument might not be used if the library isn't installed, but I'll keep the logic if it was there.
 const PDFDocument = require('pdfkit-table');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const CarouselImage = require('../models/Carouselmages');
 
 /**
  * @route   GET /api/admin/users
@@ -891,6 +895,112 @@ router.post('/metal-prices', (req, res) => {
     if (goldPerGram !== undefined) MetalPriceService.setGoldPrice(goldPerGram);
     if (silverPerGram !== undefined) MetalPriceService.setSilverPrice(silverPerGram);
     res.json({ success: true, data: MetalPriceService.getPriceData() });
+});
+
+const carouselStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../uploads/carousel');
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `carousel_${Date.now()}${ext}`);
+    }
+});
+const uploadCarousel = multer({
+    storage: carouselStorage,
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed'));
+        }
+        cb(null, true);
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
+
+/**
+ * @route   GET /api/admin/carousel
+ * @desc    Get all carousel images (admin view)
+ */
+router.get('/carousel', async (req, res) => {
+    try {
+        const images = await CarouselImage.find().sort({ order: 1, createdAt: -1 });
+        res.json({ success: true, data: images });
+    } catch (error) {
+        logger.error('Error fetching carousel images:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * @route   POST /api/admin/carousel
+ * @desc    Upload a new carousel image
+ */
+router.post('/carousel', uploadCarousel.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No image file provided' });
+        }
+        const { title, order } = req.body;
+        const imageUrl = `/uploads/carousel/${req.file.filename}`;
+
+        const image = await CarouselImage.create({
+            imageUrl,
+            title: title || '',
+            order: order ? parseInt(order) : 0,
+            isActive: true,
+        });
+
+        res.json({ success: true, data: image });
+    } catch (error) {
+        logger.error('Error uploading carousel image:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * @route   PATCH /api/admin/carousel/:id
+ * @desc    Update carousel image (toggle active, change order/title)
+ */
+router.patch('/carousel/:id', async (req, res) => {
+    try {
+        const { isActive, order, title } = req.body;
+        const update = {};
+        if (isActive !== undefined) update.isActive = isActive;
+        if (order !== undefined) update.order = parseInt(order);
+        if (title !== undefined) update.title = title;
+
+        const image = await CarouselImage.findByIdAndUpdate(req.params.id, update, { new: true });
+        if (!image) return res.status(404).json({ success: false, message: 'Image not found' });
+
+        res.json({ success: true, data: image });
+    } catch (error) {
+        logger.error('Error updating carousel image:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * @route   DELETE /api/admin/carousel/:id
+ * @desc    Delete a carousel image (also removes file from disk)
+ */
+router.delete('/carousel/:id', async (req, res) => {
+    try {
+        const image = await CarouselImage.findByIdAndDelete(req.params.id);
+        if (!image) return res.status(404).json({ success: false, message: 'Image not found' });
+
+        // Remove file from disk
+        const filePath = path.join(__dirname, '..', image.imageUrl);
+        fs.unlink(filePath, (err) => {
+            if (err) logger.warn('Could not delete carousel file:', err.message);
+        });
+
+        res.json({ success: true, message: 'Image deleted successfully' });
+    } catch (error) {
+        logger.error('Error deleting carousel image:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
 });
 
 module.exports = router;
