@@ -39,10 +39,10 @@ router.get('/users', async (req, res) => {
         });
     } catch (error) {
         logger.error('Error fetching admin users:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Error fetching users',
-            error: error.message 
+            error: error.message
         });
     }
 });
@@ -64,10 +64,10 @@ router.get('/bookings', async (req, res) => {
 
         // Rename clientId to client, serviceId to service to match frontend expectation
         const formatted = bookings.map(b => {
-           const obj = b.toObject();
-           obj.client = obj.clientId;
-           obj.service = obj.serviceId;
-           return obj;
+            const obj = b.toObject();
+            obj.client = obj.clientId;
+            obj.service = obj.serviceId;
+            return obj;
         });
 
         res.json({
@@ -373,7 +373,7 @@ router.get('/kyc/pending', async (req, res) => {
 
         // Also check for users who might be stuck with kycStatus 'pending' but no KYC doc
         const usersPending = await User.find({ kycStatus: 'pending' }, 'fullName mobile email createdAt');
-        
+
         const existingUserIds = pendingKYC.map(k => k.userId?._id?.toString() || k.userId?.toString());
         const stuckUsers = usersPending.filter(u => !existingUserIds.includes(u._id.toString()));
 
@@ -422,10 +422,10 @@ router.post('/kyc/:id/verify', async (req, res) => {
             // Let's see if we can create a minimalist KYC record for history tracking
             kycDoc = await KYC.findOne({ userId });
             if (!kycDoc) {
-                kycDoc = new KYC({ 
-                    userId, 
+                kycDoc = new KYC({
+                    userId,
                     documentType: 'ADMIN_MANUAL_CONSENT',
-                    status: 'pending' 
+                    status: 'pending'
                 });
             }
         } else {
@@ -675,9 +675,9 @@ router.get('/payments', async (req, res) => {
             .sort({ createdAt: -1 });
 
         const formatted = payments.map(p => {
-           const obj = p.toObject();
-           obj.user = obj.userId;
-           return obj;
+            const obj = p.toObject();
+            obj.user = obj.userId;
+            return obj;
         });
 
         res.json({
@@ -716,7 +716,7 @@ router.get('/reminders', async (req, res) => {
             data.user = data.userId;
             const remindedAt = new Date(data.reminderSentAt);
             const daysSince = Math.floor((new Date() - remindedAt) / (1000 * 60 * 60 * 24));
-            
+
             return {
                 ...data,
                 daysSinceReminder: daysSince >= 0 ? daysSince : 0
@@ -769,11 +769,11 @@ router.post('/payments/:id/refund', async (req, res) => {
 router.get('/referrals', async (req, res) => {
     try {
         // Find all users who have referred someone (referralCount > 0)
-        const usersWithReferrals = await User.find({ 
-            referralCount: { $gt: 0 } 
+        const usersWithReferrals = await User.find({
+            referralCount: { $gt: 0 }
         })
-        .select('fullName email mobile referralCount referralCode')
-        .sort({ referralCount: -1 });
+            .select('fullName email mobile referralCount referralCode')
+            .sort({ referralCount: -1 });
 
         // Format the data
         const referrals = usersWithReferrals.map(user => ({
@@ -806,7 +806,7 @@ router.get('/referrals', async (req, res) => {
 router.patch('/users/:id', async (req, res) => {
     try {
         const { fullName, email, mobile, investmentPlan, role, kycStatus, isActive } = req.body;
-        
+
         // Build update object with only provided fields
         const updateFields = {};
         if (fullName !== undefined) updateFields.fullName = fullName;
@@ -839,10 +839,10 @@ router.patch('/users/:id', async (req, res) => {
         });
     } catch (error) {
         logger.error('Error updating user:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Error updating user',
-            error: error.message 
+            error: error.message
         });
     }
 });
@@ -877,10 +877,10 @@ router.delete('/users/:id', async (req, res) => {
         });
     } catch (error) {
         logger.error('Error deleting user:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: 'Error deleting user',
-            error: error.message 
+            error: error.message
         });
     }
 });
@@ -937,26 +937,20 @@ router.get('/carousel', async (req, res) => {
  * @route   POST /api/admin/carousel
  * @desc    Upload a new carousel image
  */
-router.post('/carousel', uploadCarousel.single('image'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No image file provided' });
-        }
-        const { title, order } = req.body;
-        const imageUrl = `/uploads/carousel/${req.file.filename}`;
+router.post('/carousel', async (req, res) => {
+    const { title, imageUrl, order } = req.body;
 
-        const image = await CarouselImage.create({
-            imageUrl,
-            title: title || '',
-            order: order ? parseInt(order) : 0,
-            isActive: true,
-        });
+    const image = await Carousel.create({
+        title,
+        imageUrl,
+        order,
+        isActive: true,
+    });
 
-        res.json({ success: true, data: image });
-    } catch (error) {
-        logger.error('Error uploading carousel image:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
+    res.json({
+        success: true,
+        data: image,
+    });
 });
 
 /**
