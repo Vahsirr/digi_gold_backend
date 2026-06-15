@@ -938,21 +938,28 @@ router.get('/carousel', async (req, res) => {
  * @desc    Upload a new carousel image
  */
 router.post('/carousel', async (req, res) => {
-    const { title, imageUrl, order } = req.body;
+    try {
+        const { title, imageUrl, order } = req.body;
 
-    const image = await Carousel.create({
-        title,
-        imageUrl,
-        order,
-        isActive: true,
-    });
+        const image = await CarouselImage.create({
+            title,
+            imageUrl,
+            order,
+            isActive: true,
+        });
 
-    res.json({
-        success: true,
-        data: image,
-    });
+        res.json({
+            success: true,
+            data: image,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 });
-
 /**
  * @route   PATCH /api/admin/carousel/:id
  * @desc    Update carousel image (toggle active, change order/title)
